@@ -1,0 +1,2194 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Lumina Notes - Умный блокнот</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* Все стили остаются без изменений */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #7c3aed;
+            --primary-dark: #6d28d9;
+            --primary-darker: #5b21b6;
+            --secondary: #06b6d4;
+            --accent: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --bg-dark: #0a0a0f;
+            --bg-darker: #050508;
+            --bg-card: #111827;
+            --bg-card-hover: #1f2937;
+            --bg-hover: #1e1b2e;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --border: #2d3748;
+            --border-hover: #4c5180;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --shadow-glow: 0 0 40px rgba(124, 58, 237, 0.3);
+            --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+            --gradient-dark: linear-gradient(135deg, var(--primary-darker), #0f766e);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+            opacity: 0;
+            animation: particleFloat 20s infinite linear;
+        }
+
+        .particle:nth-child(1) { top: 10%; left: 5%; width: 4px; height: 4px; animation-delay: 0s; background: var(--primary); }
+        .particle:nth-child(2) { top: 20%; left: 80%; width: 6px; height: 6px; animation-delay: 2s; background: var(--secondary); }
+        .particle:nth-child(3) { top: 60%; left: 10%; width: 3px; height: 3px; animation-delay: 4s; background: var(--accent); }
+        .particle:nth-child(4) { top: 80%; left: 70%; width: 5px; height: 5px; animation-delay: 6s; background: var(--primary); }
+        .particle:nth-child(5) { top: 30%; left: 60%; width: 4px; height: 4px; animation-delay: 8s; background: var(--secondary); }
+        .particle:nth-child(6) { top: 70%; left: 40%; width: 3px; height: 3px; animation-delay: 10s; background: var(--accent); }
+        .particle:nth-child(7) { top: 40%; left: 20%; width: 5px; height: 5px; animation-delay: 12s; background: var(--primary); }
+        .particle:nth-child(8) { top: 90%; left: 30%; width: 4px; height: 4px; animation-delay: 14s; background: var(--secondary); }
+        .particle:nth-child(9) { top: 15%; left: 50%; width: 3px; height: 3px; animation-delay: 16s; background: var(--accent); }
+        .particle:nth-child(10) { top: 55%; left: 85%; width: 6px; height: 6px; animation-delay: 18s; background: var(--primary); }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translate(0, 0) rotate(0deg) scale(0.5);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.7;
+            }
+            50% {
+                transform: translate(100px, 100px) rotate(180deg) scale(1);
+                opacity: 1;
+            }
+            90% {
+                opacity: 0.3;
+            }
+            100% {
+                transform: translate(200px, 50px) rotate(360deg) scale(0.3);
+                opacity: 0;
+            }
+        }
+
+        @keyframes bgPulse {
+            0%, 100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(124, 58, 237, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(236, 72, 153, 0.05) 0%, transparent 50%);
+            background-size: 200% 200%;
+            animation: bgPulse 15s ease infinite;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .auth-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .auth-card {
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(20px);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-title {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 0.9rem;
+            background: rgba(30, 41, 59, 0.5);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .error-message {
+            color: var(--error);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .auth-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            padding: 0.9rem 1.8rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            background: var(--bg-hover);
+        }
+
+        .app-content {
+            display: none;
+        }
+
+        header {
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #7c3aed, #06b6d4, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .user-info {
+            text-align: center;
+            margin-top: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .subscription-info-compact {
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(5px);
+            padding: 1rem 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .subscription-status-line {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            flex-wrap: wrap;
+        }
+
+        .status-info {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .compact-timer {
+            background: var(--gradient);
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .timer-display {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .timer-unit {
+            display: flex;
+            align-items: baseline;
+            gap: 0.2rem;
+        }
+
+        .timer-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .timer-label {
+            font-size: 0.7rem;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .timer-separator {
+            margin: 0 0.2rem;
+            opacity: 0.7;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .nav-tab {
+            background: rgba(17, 24, 39, 0.7);
+            border: 2px solid var(--border);
+            padding: 0.9rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-tab.active {
+            background: var(--gradient);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .nav-tab:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .subscription-status {
+            padding: 0.4rem 0.9rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 0.8rem;
+        }
+
+        .status-trial {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-inactive {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .status-forced-closed {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: var(--shadow-glow);
+        }
+
+        h2 {
+            color: var(--text-primary);
+            margin-bottom: 1.2rem;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            background: rgba(30, 41, 59, 0.5);
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1.2rem;
+            font-size: 1rem;
+            resize: vertical;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 0.8rem;
+            margin-top: 1.2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-app {
+            background: rgba(17, 24, 39, 0.8);
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+            padding: 0.9rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 130px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-app:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .btn-app.primary {
+            background: var(--gradient);
+            border: none;
+            color: white;
+        }
+
+        .btn-app:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #savedNotes {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .note-item {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 1.2rem;
+            margin-bottom: 0.8rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .note-date {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .note-content {
+            color: var(--text-primary);
+            line-height: 1.5;
+            margin-bottom: 0.8rem;
+            white-space: pre-wrap;
+        }
+
+        .note-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
+        .camera-preview {
+            width: 100%;
+            height: 400px;
+            background: #0f172a;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        #scannerVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .scanner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .document-frame {
+            width: 280px;
+            height: 396px;
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+        }
+
+        .scan-guide {
+            color: white;
+            margin-top: 1rem;
+            font-weight: 500;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+
+        .scanner-gallery {
+            margin-bottom: 1rem;
+        }
+
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .scanned-image {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid var(--border);
+        }
+
+        .scanned-image img {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+        }
+
+        .remove-scan {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: var(--error);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 0.8rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .support-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .support-messages {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .support-message {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-user {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .message-time {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .message-content {
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .message-status {
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            margin-left: 0.5rem;
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .status-answered {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(17, 24, 39, 0.9);
+            color: var(--text-primary);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--primary);
+            z-index: 1000;
+            display: none;
+        }
+
+        .notification.show {
+            display: block;
+        }
+
+        .feature-blocked {
+            position: relative;
+        }
+
+        .blocked-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 15, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            z-index: 10;
+        }
+
+        .blocked-message {
+            background: rgba(17, 24, 39, 0.9);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 2px solid var(--error);
+            text-align: center;
+            max-width: 300px;
+        }
+
+        .activation-form {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-top: 1.5rem;
+        }
+
+        .activation-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .activation-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .telegram-link {
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .activation-success-special {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(124, 58, 237, 0.1));
+            border: 2px solid var(--success);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .celebration-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--success), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: var(--success);
+            animation: confetti-fall 5s linear forwards;
+            z-index: 1000;
+        }
+
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+
+        .camera-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .alternative-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+
+        .file-input-info {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .file-input-button {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .nav-tabs { flex-direction: column; }
+            .camera-controls { flex-direction: column; }
+            .btn-app { min-width: 180px; }
+            .document-frame { width: 220px; height: 311px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles-container">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <div class="auth-container" id="authContainer">
+        <div class="auth-card" id="loginForm">
+            <h2 class="auth-title">Вход в Lumina Notes</h2>
+            <div class="form-group">
+                <label for="loginUsername">Логин:</label>
+                <input type="text" id="loginUsername" placeholder="Введите ваш логин" maxlength="20">
+                <div class="error-message" id="loginUsernameError"></div>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Пароль:</label>
+                <input type="password" id="loginPassword" placeholder="Введите ваш пароль" maxlength="30">
+                <div class="error-message" id="loginPasswordError"></div>
+            </div>
+            <div class="auth-buttons">
+                <button class="btn" onclick="login()">Войти</button>
+                <button class="btn btn-secondary" onclick="showRegisterForm()">У меня нет аккаунта</button>
+            </div>
+        </div>
+
+        <div class="auth-card" id="registerForm" style="display: none;">
+            <h2 class="auth-title">Регистрация</h2>
+            <div class="form-group">
+                <label for="registerUsername">Логин (3-20 символов):</label>
+                <input type="text" id="registerUsername" placeholder="Введите логин" maxlength="20">
+                <div class="error-message" id="registerUsernameError"></div>
+            </div>
+            <div class="form-group">
+                <label for="registerPassword">Пароль (6+ символов):</label>
+                <input type="password" id="registerPassword" placeholder="Введите пароль" maxlength="30">
+                <div class="error-message" id="registerPasswordError"></div>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Подтвердите пароль:</label>
+                <input type="password" id="confirmPassword" placeholder="Повторите пароль" maxlength="30">
+                <div class="error-message" id="confirmPasswordError"></div>
+            </div>
+            <div class="auth-buttons">
+                <button class="btn" onclick="register()">Создать аккаунт</button>
+                <button class="btn btn-secondary" onclick="showLoginForm()">Вернуться ко входу</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-content" id="appContent">
+        <div class="container">
+            <header>
+                <h1>✨ Lumina Notes</h1>
+                <div class="user-info">
+                    Добро пожаловать, <span id="currentUserName"></span>!
+                    <span id="subscriptionBadge" class="subscription-status status-trial">Пробный (30д)</span>
+                    <button class="logout-btn" onclick="logout()">🚪 Выйти</button>
+                </div>
+            </header>
+
+            <div class="subscription-info-compact">
+                <div class="subscription-status-line">
+                    <div class="status-info">
+                        <span>📅</span>
+                        <span id="subscriptionStatusText">Пробный период</span>
+                        <span id="subscriptionDaysLeft">(30 дней)</span>
+                    </div>
+                    <div class="compact-timer" id="compactTimer">
+                        <span>⏰</span>
+                        <div class="timer-display">
+                            <div class="timer-unit">
+                                <span class="timer-value" id="compactDays">30</span>
+                                <span class="timer-label">д</span>
+                            </div>
+                            <span class="timer-separator">:</span>
+                            <div class="timer-unit">
+                                <span class="timer-value" id="compactHours">00</span>
+                                <span class="timer-label">ч</span>
+                            </div>
+                            <span class="timer-separator">:</span>
+                            <div class="timer-unit">
+                                <span class="timer-value" id="compactMinutes">00</span>
+                                <span class="timer-label">м</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-tabs">
+                <div class="nav-tab active" onclick="switchTab('notes')">
+                    <span>📝</span> Заметки
+                </div>
+                <div class="nav-tab" onclick="switchTab('scanner')">
+                    <span>📷</span> Сканер документов
+                </div>
+                <div class="nav-tab" onclick="switchTab('subscription')">
+                    <span>💎</span> Подписка
+                </div>
+                <div class="nav-tab" onclick="switchTab('support')">
+                    <span>💬</span> Поддержка
+                </div>
+            </div>
+
+            <div class="tab-content active" id="notesTab">
+                <div class="main-content">
+                    <div class="card">
+                        <h2>🎯 Быстрая заметка</h2>
+                        <textarea id="noteText" placeholder="💫 Напишите ваши мысли здесь..." maxlength="5000"></textarea>
+                        <div class="buttons">
+                            <button class="btn-app primary" onclick="saveNote()">
+                                <span>💾</span> Сохранить
+                            </button>
+                            <button class="btn-app warning" onclick="clearNote()">
+                                <span>🗑️</span> Очистить
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>📚 Ваши заметки</h2>
+                        <div id="savedNotes"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="scannerTab">
+                <div class="card feature-blocked" id="scannerCard">
+                    <h2>📷 Сканер документов</h2>
+                    
+                    <div class="camera-error" id="cameraError" style="display: none;">
+                        <h3>⚠️ Камера недоступна</h3>
+                        <p>Не удалось получить доступ к камере.</p>
+                        <div class="alternative-options">
+                            <div class="file-input-wrapper">
+                                <button class="btn-app primary file-input-button" id="altFileButton">
+                                    <span>📁</span> Выбрать файлы из галереи
+                                </button>
+                                <input type="file" id="fileInputAlt" accept="image/*" multiple style="display: none;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="scanner-container">
+                        <div class="camera-preview" id="cameraPreview">
+                            <video id="scannerVideo" autoplay playsinline></video>
+                            <div class="scanner-overlay">
+                                <div class="document-frame"></div>
+                                <div class="scan-guide">Наведите камеру на документ</div>
+                            </div>
+                        </div>
+                        
+                        <div class="file-input-info">
+                            <strong>💡 Совет:</strong> Если камера не работает, вы можете выбрать изображения из галереи
+                        </div>
+                        
+                        <div class="scanner-gallery" id="scannerGallery">
+                            <div class="gallery-header">
+                                <span>📸 Снимки: <span id="imageCount">0</span></span>
+                                <button class="btn-app primary" onclick="createPDFFromImages()" id="createPDFBtn">
+                                    <span>📄</span> Создать PDF
+                                </button>
+                            </div>
+                            <div class="images-grid" id="imagesGrid"></div>
+                        </div>
+                        
+                        <div class="camera-controls">
+                            <button class="btn-app primary" onclick="captureScan()" id="captureBtn">
+                                <span>📸</span> Сканировать
+                            </button>
+                            <button class="btn-app" onclick="toggleCamera()" id="toggleCameraBtn">
+                                <span>🔄</span> Переключить камеру
+                            </button>
+                            
+                            <div class="file-input-wrapper">
+                                <button class="btn-app file-input-button" id="fileButton">
+                                    <span>📁</span> Выбрать файлы
+                                </button>
+                                <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
+                            </div>
+                            
+                            <button class="btn-app warning" onclick="clearScanner()">
+                                <span>🗑️</span> Очистить все
+                            </button>
+                        </div>
+                    </div>
+                    <div class="blocked-overlay" id="scannerBlockedOverlay" style="display: none;">
+                        <div class="blocked-message">
+                            <h3>🚫 Доступ закрыт</h3>
+                            <p>Функция сканера документов недоступна. Активируйте подписку для доступа.</p>
+                            <button class="btn-app primary" onclick="switchTab('subscription')" style="margin-top: 1rem;">
+                                💎 Активировать подписку
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="subscriptionTab">
+                <div class="main-content">
+                    <div class="card">
+                        <h2>💎 Управление подписки</h2>
+                        <div id="subscriptionManagementContent"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="supportTab">
+                <div class="main-content">
+                    <div class="card">
+                        <h2>💬 Обращение в поддержку</h2>
+                        <div class="support-form">
+                            <div class="form-group">
+                                <label for="supportCategory">Категория обращения:</label>
+                                <select id="supportCategory">
+                                    <option value="technical">🔧 Техническая проблема</option>
+                                    <option value="subscription">💎 Вопрос по подписке</option>
+                                    <option value="feature">✨ Предложение по функционалу</option>
+                                    <option value="other">📌 Другое</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="supportMessage">Ваше сообщение:</label>
+                                <textarea id="supportMessage" placeholder="Опишите вашу проблему или вопрос..." maxlength="2000"></textarea>
+                            </div>
+                            <div class="buttons">
+                                <button class="btn-app primary" onclick="sendSupportMessage()">
+                                    <span>📨</span> Отправить в поддержку
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>📨 История обращений</h2>
+                        <div class="support-messages" id="supportMessages"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStream = null;
+        let capturedImages = [];
+        let useFrontCamera = false;
+        let cameraError = false;
+
+        const IMAGE_STORAGE_KEY = 'lumina_scanner_images';
+
+        // Инициализация файловых инпутов
+        function initializeFileInputs() {
+            const fileInput = document.getElementById('fileInput');
+            const fileInputAlt = document.getElementById('fileInputAlt');
+            const fileButton = document.getElementById('fileButton');
+            const altFileButton = document.getElementById('altFileButton');
+            
+            if (fileInput && fileButton) {
+                fileButton.addEventListener('click', function() {
+                    fileInput.click();
+                });
+                fileInput.addEventListener('change', handleFileSelect);
+            }
+            
+            if (fileInputAlt && altFileButton) {
+                altFileButton.addEventListener('click', function() {
+                    fileInputAlt.click();
+                });
+                fileInputAlt.addEventListener('change', handleFileSelect);
+            }
+        }
+
+        // Обработка выбора файлов
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            const subscriptionStatus = getUserSubscriptionStatus();
+            if (subscriptionStatus.status === 'forced_closed' || subscriptionStatus.status === 'inactive') {
+                showNotification('❌ Функция загрузки файлов недоступна. Активируйте подписку.', 'error');
+                return;
+            }
+
+            let loadedCount = 0;
+            const totalFiles = files.length;
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                if (!file.type.match('image.*')) {
+                    showNotification('❌ Пожалуйста, выбирайте только изображения', 'error');
+                    continue;
+                }
+
+                if (file.size > 10 * 1024 * 1024) {
+                    showNotification(`❌ Файл "${file.name}" слишком большой (максимум 10MB)`, 'error');
+                    continue;
+                }
+
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const imageData = e.target.result;
+                    
+                    const img = new Image();
+                    img.onload = function() {
+                        const newImage = {
+                            id: Date.now() + i,
+                            data: imageData,
+                            name: file.name,
+                            size: `${img.width}x${img.height}`,
+                            fileSize: formatFileSize(file.size),
+                            timestamp: new Date().toISOString(),
+                            source: 'file'
+                        };
+                        
+                        capturedImages.push(newImage);
+                        loadedCount++;
+                        
+                        logUserAction('scan_single', `Загружен файл из медиатеки: ${file.name}`, null, [newImage]);
+                        displayScannedImages();
+                        
+                        if (loadedCount === totalFiles) {
+                            showNotification(`✅ Загружено ${loadedCount} файлов из медиатеки!`, 'success');
+                        }
+                    };
+                    img.src = imageData;
+                };
+                
+                reader.readAsDataURL(file);
+            }
+            
+            event.target.value = '';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function createConfetti() {
+            const colors = ['#7c3aed', '#06b6d4', '#ec4899', '#10b981', '#f59e0b'];
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 5000);
+            }
+        }
+
+        function checkFeatureAccess() {
+            const subscriptionStatus = getUserSubscriptionStatus();
+            const scannerOverlay = document.getElementById('scannerBlockedOverlay');
+
+            if (subscriptionStatus.status === 'forced_closed' || subscriptionStatus.status === 'inactive') {
+                if (scannerOverlay) scannerOverlay.style.display = 'flex';
+                stopCamera();
+            } else {
+                if (scannerOverlay) scannerOverlay.style.display = 'none';
+            }
+        }
+
+        function loadSubscriptionManagementContent() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser) return;
+
+            const subscriptionStatus = getUserSubscriptionStatus();
+            const managementContent = document.getElementById('subscriptionManagementContent');
+
+            let statusInfo = '';
+            if (subscriptionStatus.status === 'active') {
+                statusInfo = `<p>✅ Ваша подписка активна до: <strong>${subscriptionStatus.endDate.toLocaleDateString('ru-RU')}</strong></p>`;
+            } else if (subscriptionStatus.status === 'trial') {
+                statusInfo = `<p>🆓 Пробный период истекает: <strong>${subscriptionStatus.endDate.toLocaleDateString('ru-RU')}</strong></p>`;
+            } else if (subscriptionStatus.status === 'forced_closed') {
+                statusInfo = `<p style="color: var(--error);">🚫 Подписка принудительно закрыта администратором.</p>`;
+            } else {
+                statusInfo = `<p>❌ Подписка не активна. Активируйте подписку для доступа ко всем функциям.</p>`;
+            }
+
+            managementContent.innerHTML = `
+                <div style="margin-bottom: 2rem;">
+                    <h3>Текущий статус</h3>
+                    ${statusInfo}
+                </div>
+                
+                <div class="activation-form">
+                    <h3>🔑 Активировать подписку</h3>
+                    <div class="form-group">
+                        <label for="activationCode">Код активации:</label>
+                        <input type="text" id="activationCode" placeholder="Введите промокод или код активации" style="font-family: monospace; letter-spacing: 1px;">
+                    </div>
+                    <button class="btn-app primary" onclick="activateSubscription()">
+                        <span>⚡</span> Активировать подписку
+                    </button>
+                    <div id="activationMessage" style="margin-top: 1rem;"></div>
+                </div>
+            `;
+        }
+
+        function activateSubscription() {
+            const code = document.getElementById('activationCode').value.trim().toUpperCase();
+            const messageDiv = document.getElementById('activationMessage');
+
+            if (!code) {
+                messageDiv.innerHTML = '<div class="activation-error">❌ Введите код активации</div>';
+                return;
+            }
+
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser) {
+                messageDiv.innerHTML = '<div class="activation-error">❌ Необходимо войти в систему</div>';
+                return;
+            }
+
+            const promoCodes = JSON.parse(localStorage.getItem('lumina_promocodes')) || [];
+            const activationCodes = JSON.parse(localStorage.getItem('lumina_activation_codes')) || [];
+
+            let validCode = promoCodes.find(p => p.code === code && p.active) || 
+                           activationCodes.find(a => a.code === code && a.active);
+
+            if (!validCode) {
+                messageDiv.innerHTML = '<div class="activation-error">❌ Код не найден или уже использован</div>';
+                return;
+            }
+
+            const users = JSON.parse(localStorage.getItem('lumina_users'));
+            const userIndex = users.findIndex(u => u.id === currentUser.id);
+
+            if (userIndex === -1) {
+                messageDiv.innerHTML = '<div class="activation-error">❌ Ошибка: пользователь не найден</div>';
+                return;
+            }
+
+            const now = new Date();
+            const subscriptionEnd = new Date(now.getTime() + validCode.duration * 24 * 60 * 60 * 1000);
+
+            // Снимаем принудительное закрытие если было
+            const subscriptionClosures = JSON.parse(localStorage.getItem('lumina_subscription_closures')) || [];
+            const updatedClosures = subscriptionClosures.map(closure => {
+                if (closure.userId === currentUser.id && closure.active) {
+                    return { ...closure, active: false };
+                }
+                return closure;
+            });
+            localStorage.setItem('lumina_subscription_closures', JSON.stringify(updatedClosures));
+
+            // Обновляем пользователя
+            users[userIndex].subscriptionActive = true;
+            users[userIndex].subscriptionStart = now.toISOString();
+            users[userIndex].subscriptionEnd = subscriptionEnd.toISOString();
+            users[userIndex].activationMethod = promoCodes.find(p => p.code === code) ? 'promo' : 'activation';
+            users[userIndex].trialStart = null;
+
+            localStorage.setItem('lumina_users', JSON.stringify(users));
+
+            const updatedUser = users[userIndex];
+            localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+
+            // Помечаем код как использованный
+            if (promoCodes.find(p => p.code === code)) {
+                const promoIndex = promoCodes.findIndex(p => p.code === code);
+                promoCodes[promoIndex].active = false;
+                promoCodes[promoIndex].usedBy = currentUser.username;
+                promoCodes[promoIndex].usedAt = now.toISOString();
+                localStorage.setItem('lumina_promocodes', JSON.stringify(promoCodes));
+            } else {
+                const activationIndex = activationCodes.findIndex(a => a.code === code);
+                activationCodes[activationIndex].active = false;
+                activationCodes[activationIndex].usedBy = currentUser.username;
+                activationCodes[activationIndex].usedAt = now.toISOString();
+                localStorage.setItem('lumina_activation_codes', JSON.stringify(activationCodes));
+            }
+
+            messageDiv.innerHTML = `
+                <div class="activation-success-special">
+                    <div class="celebration-text">🎉 Подписка успешно активирована!</div>
+                    <div style="color: var(--text-primary);">
+                        <strong>Длительность:</strong> ${validCode.duration} дней<br>
+                        <strong>Действует до:</strong> ${subscriptionEnd.toLocaleDateString('ru-RU')}
+                    </div>
+                </div>
+            `;
+
+            createConfetti();
+            document.getElementById('activationCode').value = '';
+            startSubscriptionTimer();
+            checkFeatureAccess();
+            loadSubscriptionManagementContent();
+            logUserAction('subscription', `Активирована подписка с кодом ${code} на ${validCode.duration} дней`);
+        }
+
+        function sendSupportMessage() {
+            const category = document.getElementById('supportCategory').value;
+            const message = document.getElementById('supportMessage').value.trim();
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+            if (!message) {
+                showNotification('📝 Введите текст сообщения!', 'warning');
+                return;
+            }
+
+            if (!currentUser) {
+                showNotification('❌ Необходимо войти в систему', 'error');
+                return;
+            }
+
+            const supportMessages = JSON.parse(localStorage.getItem('support_messages')) || [];
+            const newMessage = {
+                id: Date.now(),
+                user: currentUser.username,
+                category: category,
+                message: message,
+                timestamp: new Date().toISOString(),
+                status: 'pending'
+            };
+
+            supportMessages.push(newMessage);
+            localStorage.setItem('support_messages', JSON.stringify(supportMessages));
+
+            logUserAction('support', `Отправлено сообщение в поддержку (${category})`, message);
+            document.getElementById('supportMessage').value = '';
+            showNotification('✅ Сообщение отправлено в поддержку!', 'success');
+            loadSupportMessages();
+        }
+
+        function loadSupportMessages() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser) return;
+
+            const supportMessages = JSON.parse(localStorage.getItem('support_messages')) || [];
+            const messagesContainer = document.getElementById('supportMessages');
+            
+            const userMessages = supportMessages.filter(msg => msg.user === currentUser.username);
+
+            if (userMessages.length === 0) {
+                messagesContainer.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-secondary);">📨 У вас пока нет обращений в поддержку</div>';
+                return;
+            }
+
+            userMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            messagesContainer.innerHTML = '';
+
+            userMessages.forEach(msg => {
+                const messageElement = document.createElement('div');
+                messageElement.className = 'support-message';
+                
+                const statusBadge = msg.status === 'answered' ? 
+                    '<span class="message-status status-answered">✅ Ответ получен</span>' :
+                    '<span class="message-status status-pending">⏳ Ожидает ответа</span>';
+                
+                messageElement.innerHTML = `
+                    <div class="message-header">
+                        <div>
+                            <span class="message-user">${msg.user}</span>
+                            ${statusBadge}
+                        </div>
+                        <div class="message-time">${new Date(msg.timestamp).toLocaleDateString('ru-RU')}</div>
+                    </div>
+                    <div class="message-content">
+                        <strong>Категория:</strong> ${getCategoryName(msg.category)}<br><br>
+                        ${msg.message}
+                    </div>
+                `;
+                messagesContainer.appendChild(messageElement);
+            });
+        }
+
+        function getCategoryName(category) {
+            const categories = {
+                'technical': '🔧 Техническая проблема',
+                'subscription': '💎 Вопрос по подписке',
+                'feature': '✨ Предложение по функционалу',
+                'other': '📌 Другое'
+            };
+            return categories[category] || category;
+        }
+
+        function showNotification(message, type = 'info', duration = 3000) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification show ${type}`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, duration);
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.currentTarget.classList.add('active');
+
+            if (tabName === 'scanner') {
+                setTimeout(startCamera, 100);
+            } else {
+                stopCamera();
+            }
+
+            if (tabName === 'support') loadSupportMessages();
+            if (tabName === 'subscription') loadSubscriptionManagementContent();
+            checkFeatureAccess();
+        }
+
+        function clearAuthErrors() {
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.style.display = 'none';
+            });
+        }
+
+        function showRegisterForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            clearAuthErrors();
+        }
+
+        function showLoginForm() {
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            clearAuthErrors();
+        }
+
+        function hashPassword(password) {
+            let hash = 0;
+            for (let i = 0; i < password.length; i++) {
+                const char = password.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return Math.abs(hash).toString(16);
+        }
+
+        function saveImageToStorage(imageData, imageId) {
+            try {
+                const images = JSON.parse(localStorage.getItem(IMAGE_STORAGE_KEY)) || {};
+                images[imageId] = imageData;
+                localStorage.setItem(IMAGE_STORAGE_KEY, JSON.stringify(images));
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function logUserAction(type, details, content = null, images = null) {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser) return;
+
+            let imageReferences = null;
+            if (images && images.length > 0) {
+                imageReferences = images.map(img => {
+                    const imageId = `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    saveImageToStorage(img.data, imageId);
+                    return {
+                        id: imageId,
+                        name: img.name,
+                        size: img.size,
+                        timestamp: img.timestamp
+                    };
+                });
+            }
+
+            const action = {
+                id: Date.now(),
+                user: currentUser.username,
+                type: type,
+                details: details,
+                content: content,
+                images: imageReferences,
+                timestamp: new Date().toISOString()
+            };
+
+            let history = JSON.parse(localStorage.getItem('admin_history')) || [];
+            history.push(action);
+            localStorage.setItem('admin_history', JSON.stringify(history));
+        }
+
+        function initializeData() {
+            if (!localStorage.getItem('lumina_users')) localStorage.setItem('lumina_users', JSON.stringify([]));
+            if (!localStorage.getItem('admin_history')) localStorage.setItem('admin_history', JSON.stringify([]));
+            if (!localStorage.getItem('lumina_subscription_closures')) localStorage.setItem('lumina_subscription_closures', JSON.stringify([]));
+            if (!localStorage.getItem('support_messages')) localStorage.setItem('support_messages', JSON.stringify([]));
+            if (!localStorage.getItem('lumina_promocodes')) localStorage.setItem('lumina_promocodes', JSON.stringify([]));
+            if (!localStorage.getItem('lumina_activation_codes')) localStorage.setItem('lumina_activation_codes', JSON.stringify([]));
+            if (!localStorage.getItem(IMAGE_STORAGE_KEY)) localStorage.setItem(IMAGE_STORAGE_KEY, JSON.stringify({}));
+        }
+
+        function login() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            clearAuthErrors();
+            let hasErrors = false;
+
+            if (!username) {
+                document.getElementById('loginUsernameError').textContent = 'Введите логин';
+                document.getElementById('loginUsernameError').style.display = 'block';
+                hasErrors = true;
+            }
+
+            if (!password) {
+                document.getElementById('loginPasswordError').textContent = 'Введите пароль';
+                document.getElementById('loginPasswordError').style.display = 'block';
+                hasErrors = true;
+            }
+
+            if (hasErrors) return;
+
+            const users = JSON.parse(localStorage.getItem('lumina_users')) || [];
+            const hashedPassword = hashPassword(password);
+            const user = users.find(u => u.username === username);
+
+            if (user) {
+                if (user.password === hashedPassword) {
+                    if (!user.trialStart) {
+                        user.trialStart = new Date().toISOString();
+                        const userIndex = users.findIndex(u => u.username === username);
+                        if (userIndex !== -1) {
+                            users[userIndex].trialStart = user.trialStart;
+                            localStorage.setItem('lumina_users', JSON.stringify(users));
+                        }
+                    }
+                    
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    document.getElementById('authContainer').style.display = 'none';
+                    document.getElementById('appContent').style.display = 'block';
+                    document.getElementById('currentUserName').textContent = user.username;
+                    
+                    logUserAction('login', 'Пользователь вошел в систему');
+                    showNotification(`✅ Добро пожаловать, ${user.username}!`, 'success');
+                    
+                    loadUserNotes();
+                    startSubscriptionTimer();
+                    checkFeatureAccess();
+                    loadSubscriptionManagementContent();
+                    initializeFileInputs();
+                } else {
+                    document.getElementById('loginPasswordError').textContent = 'Неверный пароль';
+                    document.getElementById('loginPasswordError').style.display = 'block';
+                }
+            } else {
+                document.getElementById('loginUsernameError').textContent = 'Пользователь не найден';
+                document.getElementById('loginUsernameError').style.display = 'block';
+            }
+        }
+
+        function register() {
+            const username = document.getElementById('registerUsername').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            clearAuthErrors();
+            let hasErrors = false;
+
+            if (username.length < 3 || username.length > 20) {
+                document.getElementById('registerUsernameError').textContent = 'Логин должен быть от 3 до 20 символов';
+                document.getElementById('registerUsernameError').style.display = 'block';
+                hasErrors = true;
+            }
+
+            if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                document.getElementById('registerUsernameError').textContent = 'Только латинские буквы, цифры и _';
+                document.getElementById('registerUsernameError').style.display = 'block';
+                hasErrors = true;
+            }
+
+            if (password.length < 6) {
+                document.getElementById('registerPasswordError').textContent = 'Пароль должен содержать минимум 6 символов';
+                document.getElementById('registerPasswordError').style.display = 'block';
+                hasErrors = true;
+            }
+
+            if (password !== confirmPassword) {
+                document.getElementById('confirmPasswordError').textContent = 'Пароли не совпадают';
+                document.getElementById('confirmPasswordError').style.display = 'block';
+                hasErrors = true;
+            }
+
+            if (hasErrors) return;
+
+            const users = JSON.parse(localStorage.getItem('lumina_users')) || [];
+            
+            if (users.find(user => user.username.toLowerCase() === username.toLowerCase())) {
+                document.getElementById('registerUsernameError').textContent = 'Логин уже занят';
+                document.getElementById('registerUsernameError').style.display = 'block';
+                return;
+            }
+
+            const hashedPassword = hashPassword(password);
+            const newUser = {
+                id: Date.now(),
+                username: username,
+                password: hashedPassword,
+                registered: new Date().toISOString(),
+                trialStart: new Date().toISOString(),
+                pdfCount: 0
+            };
+
+            users.push(newUser);
+            localStorage.setItem('lumina_users', JSON.stringify(users));
+            logUserAction('register', 'Новый пользователь зарегистрирован');
+            showNotification('✅ Аккаунт успешно создан!', 'success');
+            showLoginForm();
+        }
+
+        function getUserSubscriptionStatus() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser) return { status: 'inactive', daysLeft: 0 };
+
+            const subscriptionClosures = JSON.parse(localStorage.getItem('lumina_subscription_closures')) || [];
+            const forcedClosure = subscriptionClosures.find(closure => 
+                closure.userId === currentUser.id && closure.active
+            );
+
+            if (forcedClosure) return { status: 'forced_closed', daysLeft: 0 };
+
+            if (currentUser.trialStart) {
+                const trialStart = new Date(currentUser.trialStart);
+                const trialEnd = new Date(trialStart.getTime() + 30 * 24 * 60 * 60 * 1000);
+                const now = new Date();
+                
+                if (now < trialEnd) {
+                    const daysLeft = Math.ceil((trialEnd - now) / (1000 * 60 * 60 * 24));
+                    return { status: 'trial', daysLeft: daysLeft, endDate: trialEnd };
+                }
+            }
+
+            if (currentUser.subscriptionActive && currentUser.subscriptionEnd) {
+                const subscriptionEnd = new Date(currentUser.subscriptionEnd);
+                const now = new Date();
+                
+                if (now < subscriptionEnd) {
+                    const daysLeft = Math.ceil((subscriptionEnd - now) / (1000 * 60 * 60 * 24));
+                    return { status: 'active', daysLeft: daysLeft, endDate: subscriptionEnd };
+                }
+            }
+
+            return { status: 'inactive', daysLeft: 0 };
+        }
+
+        function startSubscriptionTimer() {
+            if (window.subscriptionTimer) clearInterval(window.subscriptionTimer);
+            window.subscriptionTimer = setInterval(updateSubscriptionTimer, 1000);
+            updateSubscriptionTimer();
+        }
+
+        function updateSubscriptionTimer() {
+            const subscriptionStatus = getUserSubscriptionStatus();
+            const statusText = document.getElementById('subscriptionStatusText');
+            const daysLeftElement = document.getElementById('subscriptionDaysLeft');
+            const badgeElement = document.getElementById('subscriptionBadge');
+
+            if (subscriptionStatus.status === 'forced_closed') {
+                statusText.textContent = 'Подписка принудительно закрыта';
+                daysLeftElement.textContent = '';
+                badgeElement.textContent = '🚫 Закрыта';
+                badgeElement.className = 'subscription-status status-forced-closed';
+                checkFeatureAccess();
+                return;
+            }
+
+            if (subscriptionStatus.status === 'inactive') {
+                statusText.textContent = 'Подписка неактивна';
+                daysLeftElement.textContent = '';
+                badgeElement.textContent = 'Неактивна';
+                badgeElement.className = 'subscription-status status-inactive';
+                return;
+            }
+
+            if (subscriptionStatus.endDate) {
+                const now = new Date();
+                const diff = subscriptionStatus.endDate - now;
+
+                if (diff <= 0) {
+                    statusText.textContent = subscriptionStatus.status === 'trial' ? 'Пробный период закончился' : 'Подписка закончилась';
+                    daysLeftElement.textContent = '';
+                    badgeElement.textContent = 'Неактивна';
+                    badgeElement.className = 'subscription-status status-inactive';
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+                document.getElementById('compactDays').textContent = days;
+                document.getElementById('compactHours').textContent = hours.toString().padStart(2, '0');
+                document.getElementById('compactMinutes').textContent = minutes.toString().padStart(2, '0');
+                
+                statusText.textContent = subscriptionStatus.status === 'trial' ? 'Пробный период' : 'Активная подписка';
+                daysLeftElement.textContent = ` (${days} дней)`;
+                
+                if (subscriptionStatus.status === 'trial') {
+                    badgeElement.textContent = `Пробный (${days}д)`;
+                    badgeElement.className = 'subscription-status status-trial';
+                } else {
+                    badgeElement.textContent = `Активна (${days}д)`;
+                    badgeElement.className = 'subscription-status status-active';
+                }
+            }
+        }
+
+        function saveNote() {
+            const subscriptionStatus = getUserSubscriptionStatus();
+            
+            if (subscriptionStatus.status === 'forced_closed' || subscriptionStatus.status === 'inactive') {
+                showNotification('❌ Функция заметок недоступна. Активируйте подписку.', 'error');
+                return;
+            }
+
+            const text = document.getElementById('noteText').value;
+            if (text.trim() === '') {
+                showNotification('📝 Введите текст для сохранения!', 'warning');
+                return;
+            }
+            
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser) return;
+
+            const userNotes = JSON.parse(localStorage.getItem(`notes_${currentUser.username}`)) || [];
+            const newNote = {
+                id: Date.now(),
+                content: text,
+                created: new Date().toISOString()
+            };
+            userNotes.unshift(newNote);
+            localStorage.setItem(`notes_${currentUser.username}`, JSON.stringify(userNotes));
+            
+            logUserAction('create', 'Создана новая заметка', text);
+            showNotification('✅ Заметка сохранена!', 'success');
+            loadUserNotes();
+            clearNote();
+        }
+
+        function clearNote() {
+            document.getElementById('noteText').value = '';
+        }
+
+        function loadUserNotes() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser) return;
+
+            const userNotes = JSON.parse(localStorage.getItem(`notes_${currentUser.username}`)) || [];
+            const notesContainer = document.getElementById('savedNotes');
+
+            if (userNotes.length === 0) {
+                notesContainer.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-secondary);">📝 Заметок пока нет</div>';
+                return;
+            }
+
+            notesContainer.innerHTML = '';
+            userNotes.forEach(note => {
+                const noteElement = document.createElement('div');
+                noteElement.className = 'note-item';
+                noteElement.innerHTML = `
+                    <div class="note-date">${new Date(note.created).toLocaleDateString('ru-RU')}</div>
+                    <div class="note-content">${note.content}</div>
+                    <div class="note-actions">
+                        <button class="btn-app primary" onclick="editNote(${note.id})">✏️ Редактировать</button>
+                        <button class="btn-app warning" onclick="deleteNote(${note.id})">🗑️ Удалить</button>
+                    </div>
+                `;
+                notesContainer.appendChild(noteElement);
+            });
+        }
+
+        function editNote(noteId) {
+            const subscriptionStatus = getUserSubscriptionStatus();
+            
+            if (subscriptionStatus.status === 'forced_closed' || subscriptionStatus.status === 'inactive') {
+                showNotification('❌ Функция редактирования недоступна. Активируйте подписку.', 'error');
+                return;
+            }
+
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser) return;
+
+            const userNotes = JSON.parse(localStorage.getItem(`notes_${currentUser.username}`)) || [];
+            const note = userNotes.find(n => n.id === noteId);
+            
+            if (note) {
+                document.getElementById('noteText').value = note.content;
+                const noteIndex = userNotes.findIndex(n => n.id === noteId);
+                userNotes.splice(noteIndex, 1);
+                localStorage.setItem(`notes_${currentUser.username}`, JSON.stringify(userNotes));
+                logUserAction('edit', 'Заметка отредактирована', note.content);
+                loadUserNotes();
+            }
+        }
+
+        function deleteNote(noteId) {
+            const subscriptionStatus = getUserSubscriptionStatus();
+            
+            if (subscriptionStatus.status === 'forced_closed' || subscriptionStatus.status === 'inactive') {
+                showNotification('❌ Функция удаления недоступна. Активируйте подписку.', 'error');
+                return;
+            }
+
+            if (confirm('Вы уверены, что хотите удалить эту заметку?')) {
+                const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+                if (!currentUser) return;
+
+                const userNotes = JSON.parse(localStorage.getItem(`notes_${currentUser.username}`)) || [];
+                const noteIndex = userNotes.findIndex(note => note.id === noteId);
+                
+                if (noteIndex !== -1) {
+                    const deletedNote = userNotes[noteIndex];
+                    userNotes.splice(noteIndex, 1);
+                    localStorage.setItem(`notes_${currentUser.username}`, JSON.stringify(userNotes));
+                    logUserAction('delete', 'Заметка удалена', deletedNote.content);
+                    showNotification('🗑️ Заметка удалена', 'success');
+                    loadUserNotes();
+                }
+            }
+        }
+
+        // ИСПРАВЛЕННАЯ ФУНКЦИЯ КАМЕРЫ
+        async function startCamera() {
+            const subscriptionStatus = getUserSubscriptionStatus();
+            if (subscriptionStatus.status === 'forced_closed' || subscriptionStatus.status === 'inactive') return;
+
+            stopCamera();
+            cameraError = false;
+
+            try {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Браузер не поддерживает камеру');
+                }
+
+                const constraints = {
+                    video: {
+                        facingMode: useFrontCamera ? 'user' : 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                const video = document.getElementById('scannerVideo');
+                video.srcObject = currentStream;
+                
+                document.getElementById('cameraError').style.display = 'none';
+                document.getElementById('captureBtn').style.display = 'flex';
+                document.getElementById('cameraPreview').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Ошибка камеры:', error);
+                cameraError = true;
+                document.getElementById('cameraError').style.display = 'block';
+                document.getElementById('captureBtn').style.display = 'none';
+                document.getElementById('cameraPreview').style.display = 'none';
+            }
+        }
+
+        async function captureScan() {
+            const subscriptionStatus = getUserSubscriptionStatus();
+            
+            if (subscriptionStatus.status === 'forced_closed' || subscriptionStatus.status === 'inactive') {
+                showNotification('❌ Функция фото недоступна. Активируйте подписку.', 'error');
+                return;
+            }
+
+            if (cameraError) {
+                showNotification('❌ Камера недоступна', 'error');
+                return;
+            }
+
+            const video = document.getElementById('scannerVideo');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const imageData = canvas.toDataURL('image/jpeg', 0.8);
+            const newImage = {
+                id: Date.now(),
+                data: imageData,
+                name: `scan-${new Date().toLocaleString('ru-RU').replace(/[/:\\]/g, '-')}.jpg`,
+                size: `${canvas.width}x${canvas.height}`,
+                timestamp: new Date().toISOString(),
+                source: 'camera'
+            };
+            
+            capturedImages.push(newImage);
+            logUserAction('scan_single', `Сделано фото сканера`, null, [newImage]);
+            displayScannedImages();
+            showNotification('📸 Документ отсканирован!', 'success');
+        }
+
+        function displayScannedImages() {
+            const grid = document.getElementById('imagesGrid');
+            const imageCount = document.getElementById('imageCount');
+            
+            grid.innerHTML = '';
+            imageCount.textContent = capturedImages.length;
+            
+            capturedImages.forEach((image, index) => {
+                const imageElement = document.createElement('div');
+                imageElement.className = 'scanned-image';
+                imageElement.innerHTML = `
+                    <img src="${image.data}" alt="Скан ${index + 1}">
+                    <button class="remove-scan" onclick="removeScan(${image.id})">×</button>
+                `;
+                grid.appendChild(imageElement);
+            });
+            
+            document.getElementById('createPDFBtn').style.display = capturedImages.length > 0 ? 'flex' : 'none';
+        }
+
+        function removeScan(imageId) {
+            capturedImages = capturedImages.filter(img => img.id !== imageId);
+            displayScannedImages();
+        }
+
+        function toggleCamera() {
+            useFrontCamera = !useFrontCamera;
+            startCamera();
+        }
+
+        // ПОЛНОСТЬЮ ПЕРЕПИСАННАЯ ФУНКЦИЯ СОЗДАНИЯ PDF
+        async function createPDFFromImages() {
+            const subscriptionStatus = getUserSubscriptionStatus();
+            if (subscriptionStatus.status === 'forced_closed' || subscriptionStatus.status === 'inactive') {
+                showNotification('❌ Функция PDF недоступна. Активируйте подписку.', 'error');
+                return;
+            }
+
+            if (capturedImages.length === 0) {
+                showNotification('❌ Нет изображений для создания PDF', 'error');
+                return;
+            }
+
+            showNotification('📄 Создание PDF...', 'info');
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF();
+                
+                const imagesForHistory = capturedImages.map(img => ({
+                    data: img.data,
+                    name: img.name,
+                    size: img.size,
+                    timestamp: img.timestamp
+                }));
+
+                for (let i = 0; i < capturedImages.length; i++) {
+                    const image = capturedImages[i];
+                    if (i > 0) {
+                        pdf.addPage();
+                    }
+                    
+                    const img = new Image();
+                    await new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = reject;
+                        img.src = image.data;
+                    });
+
+                    // Получаем размеры страницы PDF
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+                    // Рассчитываем соотношение сторон
+                    const imgAspectRatio = img.width / img.height;
+                    const pdfAspectRatio = pdfWidth / pdfHeight;
+
+                    let finalWidth, finalHeight, x, y;
+
+                    if (imgAspectRatio > pdfAspectRatio) {
+                        // Изображение шире, чем страница - масштабируем по ширине
+                        finalWidth = pdfWidth - 40; // Отступы по 20px с каждой стороны
+                        finalHeight = finalWidth / imgAspectRatio;
+                        x = 20;
+                        y = (pdfHeight - finalHeight) / 2;
+                    } else {
+                        // Изображение выше, чем страница - масштабируем по высоте
+                        finalHeight = pdfHeight - 40; // Отступы по 20px с каждой стороны
+                        finalWidth = finalHeight * imgAspectRatio;
+                        x = (pdfWidth - finalWidth) / 2;
+                        y = 20;
+                    }
+
+                    // Убеждаемся, что изображение не выходит за границы
+                    if (finalWidth > pdfWidth - 40) {
+                        finalWidth = pdfWidth - 40;
+                        finalHeight = finalWidth / imgAspectRatio;
+                        x = 20;
+                        y = (pdfHeight - finalHeight) / 2;
+                    }
+
+                    if (finalHeight > pdfHeight - 40) {
+                        finalHeight = pdfHeight - 40;
+                        finalWidth = finalHeight * imgAspectRatio;
+                        x = (pdfWidth - finalWidth) / 2;
+                        y = 20;
+                    }
+
+                    // Добавляем изображение на страницу
+                    pdf.addImage({
+                        imageData: image.data,
+                        format: 'JPEG',
+                        x: x,
+                        y: y,
+                        width: finalWidth,
+                        height: finalHeight
+                    });
+                }
+
+                const fileName = `scanned-documents-${new Date().getTime()}.pdf`;
+                pdf.save(fileName);
+                
+                // Обновляем счетчик PDF
+                const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+                if (currentUser) {
+                    const users = JSON.parse(localStorage.getItem('lumina_users')) || [];
+                    const userIndex = users.findIndex(u => u.id === currentUser.id);
+                    if (userIndex !== -1) {
+                        users[userIndex].pdfCount = (users[userIndex].pdfCount || 0) + 1;
+                        localStorage.setItem('lumina_users', JSON.stringify(users));
+                        currentUser.pdfCount = users[userIndex].pdfCount;
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    }
+                }
+                
+                const sourceTypes = [...new Set(capturedImages.map(img => img.source))];
+                const sourceText = sourceTypes.length === 1 ? 
+                    (sourceTypes[0] === 'camera' ? 'сканов с камеры' : 'файлов из медиатеки') : 
+                    'изображений из разных источников';
+                
+                logUserAction('scan', `Создан PDF из ${capturedImages.length} ${sourceText}`, null, imagesForHistory);
+                showNotification(`✅ PDF создан из ${capturedImages.length} страниц!`, 'success');
+                
+            } catch (error) {
+                console.error('Ошибка создания PDF:', error);
+                showNotification('❌ Ошибка при создании PDF: ' + error.message, 'error');
+            }
+        }
+
+        function clearScanner() {
+            if (capturedImages.length === 0) {
+                showNotification('🧹 Сканер уже очищен', 'info');
+                return;
+            }
+            
+            if (confirm(`Удалить все ${capturedImages.length} изображений?`)) {
+                capturedImages = [];
+                displayScannedImages();
+            }
+        }
+
+        function stopCamera() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+        }
+
+        function logout() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (currentUser) logUserAction('logout', 'Пользователь вышел из системы');
+            
+            stopCamera();
+            localStorage.removeItem('currentUser');
+            document.getElementById('appContent').style.display = 'none';
+            document.getElementById('authContainer').style.display = 'flex';
+            document.getElementById('loginForm').style.display = 'block';
+            
+            if (window.subscriptionTimer) clearInterval(window.subscriptionTimer);
+        }
+
+        function checkAuth() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                const user = JSON.parse(savedUser);
+                document.getElementById('authContainer').style.display = 'none';
+                document.getElementById('appContent').style.display = 'block';
+                document.getElementById('currentUserName').textContent = user.username;
+                
+                loadUserNotes();
+                startSubscriptionTimer();
+                checkFeatureAccess();
+                loadSubscriptionManagementContent();
+                setTimeout(initializeFileInputs, 100);
+            }
+        }
+
+        // Инициализация при загрузке
+        window.onload = function() {
+            initializeData();
+            checkAuth();
+        };
+
+        window.addEventListener('beforeunload', stopCamera);
+    </script>
+</body>
+</html>
